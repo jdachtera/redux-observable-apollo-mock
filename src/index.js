@@ -1,10 +1,11 @@
-const EventEmitter = require("events");
-
-import configureMockStore from "redux-mock-store";
-import { ApolloClient } from "react-apollo";
-import { makeExecutableSchema, addMockFunctionsToSchema } from "graphql-tools";
-import { mockNetworkInterfaceWithSchema } from "apollo-test-utils";
-import { createEpicMiddleware } from "redux-observable";
+import configureMockStore from 'redux-mock-store';
+import { ApolloClient } from 'apollo-client';
+import { makeExecutableSchema, addMockFunctionsToSchema } from 'graphql-tools';
+import { createEpicMiddleware } from 'redux-observable';
+import { ApolloLink } from 'apollo-link';
+import { SchemaLink } from 'apollo-link-schema';
+import { InMemoryCache } from 'apollo-cache-inmemory';
+import EventEmitter from 'events';
 
 const createReduxActionInterceptor = () => {
   const emitter = new EventEmitter();
@@ -33,17 +34,36 @@ const createMockSchema = (typeDefs, mocks) => {
   return schema;
 };
 
-const createNetworkInterface = schema => {
-  const networkInterfaceMock = mockNetworkInterfaceWithSchema({ schema });
-  const promises = [];
+const createNetworkLink = schema => {
+  const networkInterfaceMock = new SchemaLink({ schema });
+  // Set up a custom link which will resolve a promise after all
+  // pending requests are fulfilled. This way we can wait for apollo-client
+  // to finish in the tests
+
+  let resolveApolloPromise;
+
+  const apolloPromise = new Promise(resolve => {
+    resolveApolloPromise = resolve;
+  });
+
+  let numberOfRequests = 0;
+
+  const waitLink = new ApolloLink((operation, forward) => {
+    numberOfRequests += 1;
+
+    return forward(operation).map(data => {
+      numberOfRequests -= 1;
+      if (!numberOfRequests) {
+        resolveApolloPromise();
+      }
+
+      return data;
+    });
+  });
 
   return {
-    query: (...args) => {
-      const promise = networkInterfaceMock.query(...args);
-      promises.push(promise);
-      return promise;
-    },
-    flush: () => Promise.all(promises)
+    link: waitLink.concat(networkInterfaceMock),
+    flush: () => apolloPromise,
   };
 };
 
@@ -52,21 +72,23 @@ export default (typeDefs, rootEpic, initialState, apolloMocks) => {
 
   const schema = createMockSchema(typeDefs, apolloMocks);
 
-  const networkInterface = createNetworkInterface(schema);
+  const { link, flush } = createNetworkLink(schema);
+  const cache = new InMemoryCache({});
 
   const apolloClient = new ApolloClient({
-    networkInterface
+    cache,
+    link,
   });
 
   const epicMiddleware = createEpicMiddleware(rootEpic, {
     dependencies: {
-      apolloClient
-    }
+      apolloClient,
+    },
   });
 
   const store = configureMockStore([
     reduxInterceptor.middleware,
-    epicMiddleware
+    epicMiddleware,
   ])(initialState);
 
   const expectActionToBeDispatched = (actionType, timeout) =>
@@ -81,13 +103,12 @@ export default (typeDefs, rootEpic, initialState, apolloMocks) => {
     );
 
   const dispatch = (...args) => process.nextTick(() => store.dispatch(...args));
-  const flush = () => networkInterface.flush();
 
   return {
     ...store,
     dispatch,
     flush,
     expectActionToBeDispatched,
-    expectActionToBeNotDispatched
+    expectActionToBeNotDispatched,
   };
 };
