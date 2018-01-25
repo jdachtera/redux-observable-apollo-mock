@@ -1,6 +1,6 @@
 {
   "name": "redux-observable-apollo-mock",
-  "version": "0.1.0",
+  "version": "2.0.0",
   "description": "Helper for redux-observable epic tests to set up mock data in redux store and apollo-client",
   "main": "lib/index.js",
   "scripts": {
