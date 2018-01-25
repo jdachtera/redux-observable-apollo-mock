@@ -1,8 +1,7 @@
 {
   "name": "redux-observable-apollo-mock",
   "version": "0.1.0",
-  "description":
-    "Helper for redux-observable epic tests to set up mock data in redux store and apollo-client",
+  "description": "Helper for redux-observable epic tests to set up mock data in redux store and apollo-client",
   "main": "lib/index.js",
   "scripts": {
     "prepublish": "rimraf lib && babel src --out-dir lib"
@@ -18,8 +17,11 @@
   "author": "Jascha Dachtera <jascha.dachtera@gmail.com>",
   "license": "MIT",
   "dependencies": {
+    "apollo-cache-inmemory": "^1.1.5",
+    "apollo-client": "^2.2.0",
+    "apollo-link": "^1.0.7",
+    "apollo-link-schema": "^1.0.2",
     "graphql-tools": "^2.1.9",
-    "react-apollo": "^2.0.4",
     "redux-mock-store": "^1.4.0",
     "redux-observable": "^0.17.0"
   }

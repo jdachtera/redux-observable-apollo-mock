@@ -1,9 +1,11 @@
-const EventEmitter = require("events");
-
-import configureMockStore from "redux-mock-store";
-import { ApolloClient } from "react-apollo";
-import { makeExecutableSchema, addMockFunctionsToSchema } from "graphql-tools";
-import { createEpicMiddleware } from "redux-observable";
+import configureMockStore from 'redux-mock-store';
+import { ApolloClient } from 'apollo-client';
+import { makeExecutableSchema, addMockFunctionsToSchema } from 'graphql-tools';
+import { createEpicMiddleware } from 'redux-observable';
+import { ApolloLink } from 'apollo-link';
+import { SchemaLink } from 'apollo-link-schema';
+import { InMemoryCache } from 'apollo-cache-inmemory';
+import EventEmitter from 'events';
 
 const createReduxActionInterceptor = () => {
   const emitter = new EventEmitter();
@@ -31,8 +33,6 @@ const createMockSchema = (typeDefs, mocks) => {
   addMockFunctionsToSchema({ schema, mocks });
   return schema;
 };
-
-
 
 const createNetworkLink = schema => {
   const networkInterfaceMock = new SchemaLink({ schema });
@@ -62,11 +62,9 @@ const createNetworkLink = schema => {
   });
 
   return {
-    link: networkInterfaceMock.concat(waitLink),
-    flush: () => resolveApolloPromise
+    link: waitLink.concat(networkInterfaceMock),
+    flush: () => apolloPromise,
   };
-
-
 };
 
 export default (typeDefs, rootEpic, initialState, apolloMocks) => {
@@ -75,20 +73,22 @@ export default (typeDefs, rootEpic, initialState, apolloMocks) => {
   const schema = createMockSchema(typeDefs, apolloMocks);
 
   const { link, flush } = createNetworkLink(schema);
+  const cache = new InMemoryCache({});
 
   const apolloClient = new ApolloClient({
-    link
+    cache,
+    link,
   });
 
   const epicMiddleware = createEpicMiddleware(rootEpic, {
     dependencies: {
-      apolloClient
-    }
+      apolloClient,
+    },
   });
 
   const store = configureMockStore([
     reduxInterceptor.middleware,
-    epicMiddleware
+    epicMiddleware,
   ])(initialState);
 
   const expectActionToBeDispatched = (actionType, timeout) =>
@@ -109,6 +109,6 @@ export default (typeDefs, rootEpic, initialState, apolloMocks) => {
     dispatch,
     flush,
     expectActionToBeDispatched,
-    expectActionToBeNotDispatched
+    expectActionToBeNotDispatched,
   };
 };
