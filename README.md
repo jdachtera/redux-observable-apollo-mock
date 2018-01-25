@@ -1,5 +1,20 @@
-# redux-apollo-mock-store
-Helper for tests to mock data in redux store and apollo-client
+# redux-observable-apollo-mock
+
+[![npm version](https://badge.fury.io/js/redux-observable-apollo-mock.svg)](https://badge.fury.io/js/redux-observable-apollo-mock)
+
+Easier testing for `redux-observable` epics that depend on `apollo-client`.
+
+## When to use this
+
+- Your project uses [Apollo Client](https://www.apollographql.com/client/) for managing component GraphQL queries.
+- Your project makes use of `redux-observable` [epics](https://redux-observable.js.org/docs/basics/Epics.html).
+- You are tired of the boilerplate when testing epics that depend on Apollo data.
+
+## Installation
+
+```
+npm i redux-observable-apollo-mock --dev
+```
 
 ## Usage
 
