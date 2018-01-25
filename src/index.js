@@ -10,7 +10,7 @@ import EventEmitter from 'events';
 const createReduxActionInterceptor = () => {
   const emitter = new EventEmitter();
 
-  const middleware = store => next => action => {
+  const middleware = () => next => action => {
     emitter.emit(action.type, action);
     return next(action);
   };
@@ -34,36 +34,24 @@ const createMockSchema = (typeDefs, mocks) => {
   return schema;
 };
 
-const createNetworkLink = schema => {
-  const networkInterfaceMock = new SchemaLink({ schema });
-  // Set up a custom link which will resolve a promise after all
-  // pending requests are fulfilled. This way we can wait for apollo-client
-  // to finish in the tests
-
-  let resolveApolloPromise;
-
-  const apolloPromise = new Promise(resolve => {
-    resolveApolloPromise = resolve;
-  });
-
-  let numberOfRequests = 0;
+const createMockLink = schema => {
+  const schemaLink = new SchemaLink({ schema });
+  const promises = [];
 
   const waitLink = new ApolloLink((operation, forward) => {
-    numberOfRequests += 1;
-
-    return forward(operation).map(data => {
-      numberOfRequests -= 1;
-      if (!numberOfRequests) {
-        resolveApolloPromise();
-      }
-
-      return data;
-    });
+    let res;
+    promises.push(new Promise((resolve) => {
+      res = forward(operation).map(data => {
+        resolve();
+        return data;
+      });
+    }));
+    return res;
   });
 
   return {
-    link: waitLink.concat(networkInterfaceMock),
-    flush: () => apolloPromise,
+    link: waitLink.concat(schemaLink),
+    flush: () => Promise.all(promises),
   };
 };
 
@@ -72,7 +60,7 @@ export default (typeDefs, rootEpic, initialState, apolloMocks) => {
 
   const schema = createMockSchema(typeDefs, apolloMocks);
 
-  const { link, flush } = createNetworkLink(schema);
+  const { link, flush } = createMockLink(schema);
   const cache = new InMemoryCache({});
 
   const apolloClient = new ApolloClient({
