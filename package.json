@@ -35,7 +35,7 @@
     "graphql-tools": "^2.1.9",
     "redux": "3.*",
     "redux-mock-store": "^1.4.0",
-    "redux-observable": "0.17.0",
+    "redux-observable": "0.16.0",
     "rxjs": "^5.0.0"
   }
 }
