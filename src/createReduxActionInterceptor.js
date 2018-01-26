@@ -1,9 +1,9 @@
-import EventEmitter from "events";
+import EventEmitter from 'events';
 
 const createReduxActionInterceptor = () => {
   const emitter = new EventEmitter();
 
-  const middleware = () => next => action => {
+  const middleware = () => next => (action) => {
     emitter.emit(action.type, action);
     return next(action);
   };
@@ -11,7 +11,7 @@ const createReduxActionInterceptor = () => {
   const waitForAction = (type, timeout) =>
     new Promise((resolve, reject) => {
       const timer = setTimeout(reject, timeout || 10);
-      emitter.once(type, action => {
+      emitter.once(type, (action) => {
         clearTimeout(timer);
         resolve(action);
       });

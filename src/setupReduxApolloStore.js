@@ -1,17 +1,17 @@
-import configureMockStore from "redux-mock-store";
-import { ApolloClient } from "apollo-client";
-import { createEpicMiddleware } from "redux-observable";
-import { InMemoryCache } from "apollo-cache-inmemory";
+import configureMockStore from 'redux-mock-store';
+import { ApolloClient } from 'apollo-client';
+import { createEpicMiddleware } from 'redux-observable';
+import { InMemoryCache } from 'apollo-cache-inmemory';
 
-import createReduxActionInterceptor from "./createReduxActionInterceptor";
-import createMockSchema from "./createMockSchema";
-import createMockLink from "./createMockLink";
+import createReduxActionInterceptor from './createReduxActionInterceptor';
+import createMockSchema from './createMockSchema';
+import createMockLink from './createMockLink';
 
 const setupReduxApolloStore = (
   typeDefs,
   rootEpic,
   initialState,
-  apolloMocks
+  apolloMocks,
 ) => {
   const reduxInterceptor = createReduxActionInterceptor();
 
@@ -22,18 +22,18 @@ const setupReduxApolloStore = (
 
   const apolloClient = new ApolloClient({
     cache,
-    link
+    link,
   });
 
   const epicMiddleware = createEpicMiddleware(rootEpic, {
     dependencies: {
-      apolloClient
-    }
+      apolloClient,
+    },
   });
 
   const store = configureMockStore([
     reduxInterceptor.middleware,
-    epicMiddleware
+    epicMiddleware,
   ])(initialState);
 
   const expectActionToBeDispatched = (actionType, timeout) =>
@@ -44,7 +44,7 @@ const setupReduxApolloStore = (
       () => {
         throw new Error(`Action ${actionType} was dispatched unexpectedly.`);
       },
-      () => {}
+      () => {},
     );
 
   const dispatch = (...args) => process.nextTick(() => store.dispatch(...args));
@@ -54,7 +54,7 @@ const setupReduxApolloStore = (
     dispatch,
     flush,
     expectActionToBeDispatched,
-    expectActionToBeNotDispatched
+    expectActionToBeNotDispatched,
   };
 };
 

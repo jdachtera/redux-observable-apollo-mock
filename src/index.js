@@ -1,13 +1,13 @@
-import createReduxActionInterceptor from "./createReduxActionInterceptor";
-import createMockSchema from "./createMockSchema";
-import createMockLink from "./createMockLink";
-import setupReduxApolloStore from "./setupReduxApolloStore";
+import createReduxActionInterceptor from './createReduxActionInterceptor';
+import createMockSchema from './createMockSchema';
+import createMockLink from './createMockLink';
+import setupReduxApolloStore from './setupReduxApolloStore';
 
 export {
   createReduxActionInterceptor,
   createMockSchema,
   createMockLink,
-  setupReduxApolloStore
+  setupReduxApolloStore,
 };
 
 export default setupReduxApolloStore;

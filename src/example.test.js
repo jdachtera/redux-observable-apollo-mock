@@ -1,9 +1,7 @@
-import setupReduxApolloStore from ".";
-import "rxjs/add/operator/mergeMap";
-
-import { Observable } from "rxjs";
-
-import gql from "graphql-tag";
+import 'rxjs/add/operator/mergeMap';
+import { Observable } from 'rxjs';
+import gql from 'graphql-tag';
+import { setupReduxApolloStore } from '.';
 
 const typeDefs = gql`
   type Query {
@@ -11,8 +9,8 @@ const typeDefs = gql`
   }
 `;
 
-const REQUEST = "REQUEST";
-const RESPONSE = "RESPONSE";
+const REQUEST = 'REQUEST';
+const RESPONSE = 'RESPONSE';
 
 const exampleEpic = (action$, store, { apolloClient }) =>
   action$
@@ -23,33 +21,31 @@ const exampleEpic = (action$, store, { apolloClient }) =>
           query ExampleQuery {
             hello
           }
-        `
-      })
-    )
+        `,
+      }))
     .mergeMap(response =>
       Observable.of({
         type: RESPONSE,
         value: {
           apollo: response.data.hello,
-          redux: store.getState().hello
-        }
-      })
-    );
+          redux: store.getState().hello,
+        },
+      }));
 
 const createStore = (initialState, apolloMocks) =>
   setupReduxApolloStore(typeDefs, exampleEpic, initialState, apolloMocks);
 
-describe("testExampleEpic", () => {
-  test("expects epic to emit RESPONSE action with mocked values from apollo-client and redux", async () => {
+describe('testExampleEpic', () => {
+  test('expects epic to emit RESPONSE action with mocked values from apollo-client and redux', async () => {
     const store = createStore(
       {
-        hello: "redux"
+        hello: 'redux',
       },
       {
         Query: () => ({
-          hello: "apollo"
-        })
-      }
+          hello: 'apollo',
+        }),
+      },
     );
     const action1 = { type: REQUEST };
 
@@ -58,11 +54,11 @@ describe("testExampleEpic", () => {
     await store.expectActionToBeDispatched(RESPONSE);
 
     expect(store.getActions()).toEqual([
-      { type: "REQUEST" },
+      { type: 'REQUEST' },
       {
-        type: "RESPONSE",
-        value: { apollo: "apollo", redux: "redux" }
-      }
+        type: 'RESPONSE',
+        value: { apollo: 'apollo', redux: 'redux' },
+      },
     ]);
   });
 });

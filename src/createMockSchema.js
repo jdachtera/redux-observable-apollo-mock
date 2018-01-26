@@ -1,4 +1,4 @@
-import { makeExecutableSchema, addMockFunctionsToSchema } from "graphql-tools";
+import { makeExecutableSchema, addMockFunctionsToSchema } from 'graphql-tools';
 
 const createMockSchema = (typeDefs, mocks) => {
   const schema = makeExecutableSchema({ typeDefs });
